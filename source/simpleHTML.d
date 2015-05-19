@@ -1,6 +1,8 @@
 module simpleHTML;
 
 import std.xml;
+import std.algorithm;
+import std.string;
 
 class Tag
 {
@@ -99,7 +101,25 @@ class TagEmpty(string NAME) : Tag
     }
 }
 
-private class TagSingleton(T : Tag)
+private class TagSingleton(T : TagHasContents!U, string U)
+{
+    T dup() const
+    {
+        return new T;
+    }
+
+    T appendChild(T2 : TagSingleton!U2, U2 : Tag)(const T2 t) const
+    {
+        return dup().appendChild(t.dup());
+    }
+
+    T appendChild(Tag t) const
+    {
+        return dup().appendChild(t);
+    }
+}
+
+private class TagSingleton(T : TagEmpty!U, string U)
 {
     T dup() const
     {
@@ -107,13 +127,18 @@ private class TagSingleton(T : Tag)
     }
 }
 
-@() alias HTML = TagHasContents!("html");
-@() alias A = TagHasContents!("a");
-@() alias BR = TagEmpty!("br");
-@() alias IMG = TagEmpty!("img");
+private template GenTag(string NAME, bool HAS_CONTENTS)
+{
+    const char[] uName = NAME.toUpper;
+    const char[] type = HAS_CONTENTS ? "TagHasContents" : "TagEmpty";
+    const char[] GenTag =
+        "alias "~uName~" = "~type~"!(\""~NAME~"\");\n"
+        "const auto "~NAME~" = new TagSingleton!(" ~uName~ ");";
+}
 
-const auto html = new TagSingleton!(HTML);
-const auto a = new TagSingleton!(A);
-const auto br = new TagSingleton!(BR);
-const auto img = new TagSingleton!(BR);
+mixin(GenTag!("html", true));
+mixin(GenTag!("a", true));
+mixin(GenTag!("br", false));
+mixin(GenTag!("img", false));
+mixin(GenTag!("span", true));
 
