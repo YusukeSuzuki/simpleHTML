@@ -5,7 +5,9 @@ import simpleHTML;
 void main()
 {
     auto doc = html.dup;
-    doc.appendChild(a.appendChild(span.appendChild(br)));
+    doc <<= a( span( br ) );
+
+
     writeln(doc.dump());
 }
 

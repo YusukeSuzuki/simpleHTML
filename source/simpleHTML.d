@@ -19,6 +19,8 @@ class Tag
 
     abstract string dump() const;
 
+    //abstract Tag dup() const;
+
     string name;
     string[string] attributes;
 }
@@ -73,6 +75,26 @@ class TagHasContents(string NAME) : Tag
         return this;
     }
 
+    /*
+    typeof(this) opBinary(string op)(Tag t)
+        if(op == "<<")
+    {
+        return this;
+    }
+    */
+
+    typeof(this) opOpAssign(string op)(Tag t)
+        if(op == "<<")
+    {
+        return this.appendChild(t);
+    }
+
+    typeof(this) opOpAssign(string op)(Tag[] t)
+        if(op == "<<")
+    {
+        return this.appendChild(t);
+    }
+
     Tag[] children;
 }
 
@@ -118,7 +140,15 @@ private class TagSingleton(T : TagHasContents!U, string U)
         return dup().appendChild(t);
     }
 
+    T opCall(T2 : TagSingleton!U2, U2 : Tag)(const T2 t) const
+    {
+        return this.appendChild(t);
+    }
 
+    T opCall(Tag t) const
+    {
+        return this.appendChild(t);
+    }
 }
 
 private class TagSingleton(T : TagEmpty!U, string U)
@@ -247,4 +277,6 @@ mixin(GenTag!("ul", true));
 mixin(GenTag!("var", true));
 mixin(GenTag!("video", true));
 mixin(GenTag!("wbr", false));
+
+
 
