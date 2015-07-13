@@ -98,6 +98,32 @@ class TagHasContents(string NAME) : Tag
     Tag[] children;
 }
 
+class TagText : Tag
+{
+    this()
+    {
+        super("");
+    }
+
+    this(string t)
+    {
+        super("");
+        text = t;
+    }
+
+    override string dump() const
+    {
+        return text;
+    }
+
+    string text;
+}
+
+TagText t(string text)
+{
+    return new TagText(text);
+}
+
 class TagEmpty(string NAME) : Tag
 {
     this()
@@ -140,6 +166,27 @@ private class TagSingleton(T : TagHasContents!U, string U)
         return dup().appendChild(t);
     }
 
+    T appendChild(A ...)(A a) const
+    {
+        import std.traits;
+
+        auto result = dup();
+
+        foreach(t; a)
+        {
+            static if(is(typeof(t):const Tag))
+            {
+                result.appendChild(t);
+            }
+            else
+            {
+                result.appendChild(t.dup());
+            }
+        }
+
+        return result;
+    }
+
     T opCall(T2 : TagSingleton!U2, U2 : Tag)(const T2 t) const
     {
         return this.appendChild(t);
@@ -148,6 +195,11 @@ private class TagSingleton(T : TagHasContents!U, string U)
     T opCall(Tag t) const
     {
         return this.appendChild(t);
+    }
+
+    T opCall(A ...)(A a) const
+    {
+        return this.appendChild(a[0 .. $]);
     }
 }
 
